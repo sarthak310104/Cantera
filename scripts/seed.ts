@@ -11,7 +11,13 @@
  * Guardiola is both. Whether someone "is a coach" falls out of whether they
  * have outgoing COACHED edges, not a stored flag.
  */
-import "dotenv/config";
+// dotenv/config on its own only reads a file literally named ".env" — it has
+// no idea about Next.js's ".env.local" convention. This script runs via tsx,
+// outside Next's request pipeline, so nothing else loads .env.local for us;
+// we have to point dotenv at it explicitly.
+import { config } from "dotenv";
+config({ path: ".env.local" });
+
 import { getDriver } from "../lib/db";
 
 type PersonSeed = {
