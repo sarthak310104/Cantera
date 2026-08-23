@@ -34,7 +34,31 @@ export function getDriver(): Driver {
 }
 
 /**
- * Runs a parameterized Cypher query and returns plain records.
+ * Neo4j returns whole numbers (any integer property, and every count()/
+ * collect() result) as a boxed { low, high } Integer object rather than a
+ * plain JS number, to avoid silently losing precision on values bigger than
+ * JS can represent exactly. Our data never gets remotely that large, so we
+ * convert everything back to a plain number here, once, rather than having
+ * every caller (and every JSX expression) remember to unwrap it themselves.
+ */
+function convertIntegers(value: unknown): unknown {
+  if (neo4j.isInt(value)) {
+    return value.toNumber();
+  }
+  if (Array.isArray(value)) {
+    return value.map(convertIntegers);
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, convertIntegers(v)])
+    );
+  }
+  return value;
+}
+
+/**
+ * Runs a parameterized Cypher query and returns plain records, with any
+ * Neo4j Integer values already converted to normal JS numbers.
  * Every query in this app goes through here — never string-concatenate Cypher.
  */
 export async function runQuery<T = Record<string, unknown>>(
@@ -44,7 +68,7 @@ export async function runQuery<T = Record<string, unknown>>(
   const session = getDriver().session();
   try {
     const result = await session.run(cypher, params);
-    return result.records.map((record) => record.toObject() as T);
+    return result.records.map((record) => convertIntegers(record.toObject()) as T);
   } finally {
     await session.close();
   }

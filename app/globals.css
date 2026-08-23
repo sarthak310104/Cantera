@@ -1,0 +1,52 @@
+:root {
+  /* Barca-blue base, chalk-white text, garnet + gold accents.
+     Real Madrid ivory/gold trim is reserved ONLY for rivalry-typed edges/badges,
+     so it reads as "the other team's color" rather than a second house accent. */
+  --pitch: #0b1f3d;
+  --panel: #142a54;
+  --panel-hover: #1a3466;
+  --garnet: #a50044;
+  --garnet-hover: #c40052;
+  --gold: #edbb00;
+  --chalk: #f4f1e8;
+  --chalk-muted: #a9b4c9;
+  --rival: #e8e8e8;
+  --border: rgba(244, 241, 232, 0.12);
+  --border-strong: rgba(244, 241, 232, 0.24);
+
+  --font-display: "Oswald", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--pitch);
+  color: var(--chalk);
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+button,
+input {
+  font-family: var(--font-body);
+}
+
+a {
+  color: var(--gold);
+}

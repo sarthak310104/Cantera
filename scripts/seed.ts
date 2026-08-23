@@ -43,6 +43,16 @@ const managers: PersonSeed[] = [
   { id: "ancelotti", name: "Carlo Ancelotti", nationality: "Italy", bornYear: 1959 },
   { id: "zidane", name: "Zinedine Zidane", nationality: "France", bornYear: 1972 },
   { id: "capello", name: "Fabio Capello", nationality: "Italy", bornYear: 1946 },
+  // Premier League
+  { id: "wenger", name: "Arsene Wenger", nationality: "France", bornYear: 1949 },
+  { id: "ferguson", name: "Alex Ferguson", nationality: "Scotland", bornYear: 1941 },
+  { id: "klopp", name: "Jurgen Klopp", nationality: "Germany", bornYear: 1967 },
+  { id: "arteta", name: "Mikel Arteta", nationality: "Spain", bornYear: 1982 },
+  { id: "kompany", name: "Vincent Kompany", nationality: "Belgium", bornYear: 1986 },
+  // Serie A
+  { id: "conte", name: "Antonio Conte", nationality: "Italy", bornYear: 1969 },
+  { id: "allegri", name: "Massimiliano Allegri", nationality: "Italy", bornYear: 1967 },
+  { id: "sacchi", name: "Arrigo Sacchi", nationality: "Italy", bornYear: 1946 },
 ];
 
 // People who were coached but never managed a club themselves — :Person only,
@@ -50,6 +60,7 @@ const managers: PersonSeed[] = [
 const players: PersonSeed[] = [
   { id: "messi", name: "Lionel Messi", nationality: "Argentina", bornYear: 1987 },
   { id: "iniesta", name: "Andres Iniesta", nationality: "Spain", bornYear: 1984 },
+  { id: "henry", name: "Thierry Henry", nationality: "France", bornYear: 1977 },
 ];
 
 const clubs: ClubSeed[] = [
@@ -60,6 +71,17 @@ const clubs: ClubSeed[] = [
   { id: "chelsea", name: "Chelsea", country: "England" },
   { id: "mancity", name: "Manchester City", country: "England" },
   { id: "intermilan", name: "Inter Milan", country: "Italy" },
+  // Premier League
+  { id: "arsenal", name: "Arsenal", country: "England" },
+  { id: "manutd", name: "Manchester United", country: "England" },
+  { id: "liverpool", name: "Liverpool", country: "England" },
+  { id: "tottenham", name: "Tottenham Hotspur", country: "England" },
+  { id: "burnley", name: "Burnley", country: "England" },
+  { id: "dortmund", name: "Borussia Dortmund", country: "Germany" },
+  // Serie A
+  { id: "juventus", name: "Juventus", country: "Italy" },
+  { id: "acmilan", name: "AC Milan", country: "Italy" },
+  { id: "roma", name: "AS Roma", country: "Italy" },
 ];
 
 const tactics: TacticSeed[] = [
@@ -92,6 +114,24 @@ const managedAt: [string, string, string][] = [
   ["zidane", "realmadrid", "2016-2018"],
   ["capello", "realmadrid", "1996-1997"],
   ["capello", "realmadrid", "2006-2007"],
+  // Premier League
+  ["wenger", "arsenal", "1996-2018"],
+  ["ferguson", "manutd", "1986-2013"],
+  ["klopp", "dortmund", "2008-2015"],
+  ["klopp", "liverpool", "2015-2024"],
+  ["arteta", "arsenal", "2019-present"],
+  ["kompany", "burnley", "2022-2023"],
+  ["kompany", "bayern", "2024-present"],
+  ["mourinho", "tottenham", "2019-2021"],
+  ["mourinho", "roma", "2021-2024"],
+  ["conte", "chelsea", "2016-2018"],
+  // Serie A
+  ["conte", "juventus", "2011-2014"],
+  ["conte", "intermilan", "2019-2021"],
+  ["allegri", "acmilan", "2010-2014"],
+  ["allegri", "juventus", "2014-2019"],
+  ["sacchi", "acmilan", "1987-1991"],
+  ["ancelotti", "acmilan", "2001-2009"],
 ];
 
 /**
@@ -109,6 +149,12 @@ const coached: [string, string][] = [
   ["luisenrique", "messi"], // Messi played under Luis Enrique at Barca, 2014-2017
   ["guardiola", "iniesta"], // Iniesta played under Guardiola at Barca, 2008-2012
   ["vangaal", "iniesta"], // Iniesta broke into the first team under van Gaal, 1997-2000
+  // Premier League
+  ["wenger", "henry"], // Henry played under Wenger at Arsenal, 1999-2007
+  ["wenger", "arteta"], // Arteta played under Wenger at Arsenal, 2011-2016
+  ["guardiola", "kompany"], // Kompany captained Guardiola's Man City, 2016-2019
+  // Serie A -> bridges into the existing Real Madrid branch via Ancelotti
+  ["sacchi", "ancelotti"], // Ancelotti played in Sacchi's Milan side, 1987-1991
 ];
 
 /**
@@ -119,6 +165,7 @@ const coached: [string, string][] = [
 const assistantTo: [string, string][] = [
   ["tito", "guardiola"], // Vilanova was Guardiola's assistant at Barca, 2008-2012, before succeeding him
   ["zidane", "ancelotti"], // was Ancelotti's assistant/reserve-team coach at Real Madrid before taking over
+  ["arteta", "guardiola"], // was Guardiola's assistant coach at Man City, 2016-2019, before managing Arsenal
 ];
 
 /** [managerId, tacticId] */
@@ -134,6 +181,11 @@ const employsTactic: [string, string][] = [
   ["mourinho", "parkthebus"],
   ["ancelotti", "parkthebus"],
   ["capello", "parkthebus"],
+  ["klopp", "gegenpressing"],
+  ["sacchi", "gegenpressing"], // Sacchi's high-pressing Milan is widely cited as a forefather of gegenpressing
+  ["wenger", "tikitaka"], // "Wenger-ball" — fluid short passing, often compared stylistically to tiki-taka
+  ["conte", "parkthebus"],
+  ["allegri", "parkthebus"],
 ];
 
 async function seed() {
@@ -214,9 +266,24 @@ async function seed() {
       );
     }
 
-    console.log("Linking Barcelona-Real Madrid rivalry...");
+    console.log("Linking club rivalries...");
     await session.run(
       `MATCH (a:Club {id: "barcelona"}), (b:Club {id: "realmadrid"})
+       MERGE (a)-[:RIVAL_OF]->(b)
+       MERGE (b)-[:RIVAL_OF]->(a)`
+    );
+    await session.run(
+      `MATCH (a:Club {id: "arsenal"}), (b:Club {id: "tottenham"})
+       MERGE (a)-[:RIVAL_OF]->(b)
+       MERGE (b)-[:RIVAL_OF]->(a)`
+    );
+    await session.run(
+      `MATCH (a:Club {id: "manutd"}), (b:Club {id: "liverpool"})
+       MERGE (a)-[:RIVAL_OF]->(b)
+       MERGE (b)-[:RIVAL_OF]->(a)`
+    );
+    await session.run(
+      `MATCH (a:Club {id: "juventus"}), (b:Club {id: "acmilan"})
        MERGE (a)-[:RIVAL_OF]->(b)
        MERGE (b)-[:RIVAL_OF]->(a)`
     );
