@@ -148,7 +148,20 @@ a playing route).
 
 ## Screenshots
 
-*(to be added after deployment)*
+**Full network** — the whole coaching graph on load, garnet nodes for
+managers/players, gold arrows tracing `COACHED` lineage:
+
+![Full network view](media/fullnetwork.png)
+
+**Focused lineage** — searching a manager (here, Johan Cruyff) narrows the
+graph to just their coaching lineage, with a hop-count selector:
+
+![Focused lineage view](media/focusedlineage.png)
+
+**Coaching cousins** — the headline query, live: pairs of managers linked
+through shared coaching influence who never worked at the same club:
+
+![Coaching cousins panel](media/coachingcousins.png)
 
 ## Deployment
 
@@ -156,4 +169,4 @@ Deployed on [Vercel](https://vercel.com). The three `COGNODB_*` environment
 variables from `.env.local` are set in the Vercel project's environment
 variables — never committed to the repo.
 
-Live demo: *(link to be added)*
+Live demo: [cantera-1beal2pe5-null-app.vercel.app](https://cantera-1beal2pe5-null-app.vercel.app/)
