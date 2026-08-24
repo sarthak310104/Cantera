@@ -211,4 +211,4 @@ Deployed on [Vercel](https://vercel.com). The three `COGNODB_*` environment
 variables from `.env.local` are set in the Vercel project's environment
 variables — never committed to the repo.
 
-Live demo: [cantera-1beal2pe5-null-app.vercel.app](https://cantera-1beal2pe5-null-app.vercel.app/)
+Live demo: [cantera-livid.vercel.app](https://cantera-livid.vercel.app/)
