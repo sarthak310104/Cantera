@@ -15,9 +15,9 @@ const EDGE_TYPES: NetworkEdge["type"][] = [
  * paginating — revisit if the seed data grows past a few hundred entities.
  */
 export async function getFullNetwork(): Promise<NetworkGraph> {
-  const nodeRows = await runQuery<{ id: string; labels: string[]; name: string }>(
+  const nodeRows = await runQuery<{ id: string; labels: string[]; name: string; country: string | null }>(
     `MATCH (n)
-     RETURN n.id AS id, labels(n) AS labels, n.name AS name`
+     RETURN n.id AS id, labels(n) AS labels, n.name AS name, n.country AS country`
   );
 
   const nodes: NetworkNode[] = nodeRows.map((row) => ({
@@ -26,6 +26,9 @@ export async function getFullNetwork(): Promise<NetworkGraph> {
     // Person who has also managed a club should render as a Manager.
     label: (row.labels.includes("Manager") ? "Manager" : row.labels[0]) as NetworkNode["label"],
     name: row.name,
+    // Only Club nodes actually have this property; it's undefined for
+    // everyone else. Used client-side to power the league filter.
+    country: row.country ?? undefined,
   }));
 
   const edgeRows = await runQuery<{

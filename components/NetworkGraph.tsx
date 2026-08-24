@@ -62,6 +62,22 @@ export function NetworkGraph({ graph, width = BASE_WIDTH, height = BASE_HEIGHT, 
     const simNodes = graph.nodes.map((n) => ({ ...n }));
     const simLinks = graph.edges.map((e) => ({ source: e.sourceId, target: e.targetId }));
 
+    // A hard clamp applied only after ticking finishes undoes the spacing
+    // the collide force worked out — it slams anyone near the edge into a
+    // much smaller region all at once. A soft boundary force that nudges
+    // stray nodes back gently, applied on every tick, lets collision
+    // detection keep working correctly throughout the whole simulation.
+    const maxRadius = Math.max(...Object.values(NODE_RADIUS));
+    const margin = maxRadius + 20;
+    function boundingForce(alpha: number) {
+      for (const n of simNodes as any[]) {
+        if (n.x < margin) n.vx += (margin - n.x) * 0.08 * alpha;
+        if (n.x > width - margin) n.vx -= (n.x - (width - margin)) * 0.08 * alpha;
+        if (n.y < margin) n.vy += (margin - n.y) * 0.08 * alpha;
+        if (n.y > height - margin - 20) n.vy -= (n.y - (height - margin - 20)) * 0.08 * alpha;
+      }
+    }
+
     const simulation = forceSimulation(simNodes as any)
       .force(
         "link",
@@ -75,6 +91,7 @@ export function NetworkGraph({ graph, width = BASE_WIDTH, height = BASE_HEIGHT, 
         "collide",
         forceCollide((d: any) => NODE_RADIUS[d.label as NetworkNode["label"]] + 22)
       )
+      .force("bounds", boundingForce as any)
       .stop();
 
     // 500 ticks (up from 300) gives the larger node count enough iterations
@@ -82,18 +99,16 @@ export function NetworkGraph({ graph, width = BASE_WIDTH, height = BASE_HEIGHT, 
     // partway through convergence.
     for (let i = 0; i < 500; i++) simulation.tick();
 
-    // forceCenter only pulls the average position toward center — individual
-    // nodes under strong repulsion can still end up with a center outside
-    // the canvas, which SVG then clips (half a circle at the edge). Clamp
-    // each node back inside the viewBox after the simulation settles, with
-    // extra bottom margin since the label text sits below the node.
-    const maxRadius = Math.max(...Object.values(NODE_RADIUS));
+    // Final safety clamp for any rare outlier the soft force didn't fully
+    // catch — should rarely trigger now that boundaries are respected
+    // throughout the simulation rather than only at the end.
     simNodes.forEach((n: any) => {
       n.x = Math.max(maxRadius + 8, Math.min(width - maxRadius - 8, n.x));
       n.y = Math.max(maxRadius + 8, Math.min(height - maxRadius - 28, n.y));
     });
 
     setPositioned(simNodes as PositionedNode[]);
+    setZoom(1);
   }, [graph, width, height]);
 
   const nodeById = useMemo(() => {

@@ -30,6 +30,8 @@ export type NetworkNode = {
   id: string;
   label: "Person" | "Manager" | "Club" | "Tactic";
   name: string;
+  /** Only present on Club nodes. Used for the league filter. */
+  country?: string;
 };
 
 export type NetworkGraph = {

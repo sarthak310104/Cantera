@@ -8,6 +8,30 @@ tactical) carries forward from a player's career into the next generation of
 managers. Built on [CognoDB](https://console.cognodb.com), a managed graph
 database speaking openCypher over Bolt.
 
+## Features
+
+- **Full network view** — the whole coaching graph on load, laid out with a
+  force simulation and styled like a tactics board (garnet nodes, gold
+  arrows for coaching lineage)
+- **Search and focus** — find a manager and narrow the graph to just their
+  coaching lineage, with an adjustable hop count (1–5)
+- **Click-a-node detail panel** — click any node (manager, player, club, or
+  tactic) for its details: nationality, tenures with years, who they
+  coached, who coached them, tactics employed, rivalries — derived entirely
+  from data already loaded client-side, no extra API calls
+- **League filter** — narrow the full network to Premier League, Serie A,
+  La Liga, Bundesliga, or Eredivisie clubs and the managers connected to
+  them
+- **Coaching cousins panel** — the headline query, live: managers linked
+  through shared coaching influence who never worked at the same club
+- **Browsable managers page** (`/managers`) — a plain table view of every
+  manager, independent of the graph, with deep links back into a manager's
+  focused lineage (`/?manager=<id>`)
+- **Legend** and a **stats bar** (manager/club/nationality/coaching-link
+  counts) so the scale and meaning of the graph is legible without
+  explanation
+- Loading, empty, and DB-unreachable error states throughout
+
 ## Why a graph database?
 
 The questions this app is built to answer are relational by nature —
@@ -110,15 +134,20 @@ so on transitively).
 
 ```cypher
 MATCH (start:Manager {id: $managerId})
-MATCH (start)-[:COACHED*1..3]-(other)
-RETURN DISTINCT other
+OPTIONAL MATCH (start)-[:COACHED*1..3]-(other)
+WITH start, collect(DISTINCT other) AS others
+UNWIND others + [start] AS p
+RETURN DISTINCT p
 ```
 
-The hop bound (`3` above) can't actually be passed as a query parameter —
-Neo4j requires a literal integer in a variable-length path pattern — so
-`getManagerLineage()` clamps the requested hop count to an integer between
-1 and 5 *before* it's interpolated into the query string, rather than
-accepting arbitrary input.
+`OPTIONAL MATCH` matters here more than it looks: a required `MATCH` would
+return zero rows for a manager with no `COACHED` connections at all,
+which would incorrectly read as "manager not found" rather than "found,
+just isolated." The hop bound (`3` above) can't actually be passed as a
+query parameter — Neo4j requires a literal integer in a variable-length
+path pattern — so `getManagerLineage()` clamps the requested hop count to
+an integer between 1 and 5 *before* it's interpolated into the query
+string, rather than accepting arbitrary input.
 
 ### The headline query — "coaching cousins"
 
@@ -162,6 +191,19 @@ graph to just their coaching lineage, with a hop-count selector:
 through shared coaching influence who never worked at the same club:
 
 ![Coaching cousins panel](media/coachingcousins.png)
+
+**Node info panel** — click any node for its details (nationality, tenures,
+who they coached, tactics, rivalries):
+
+![Node Info panel](media/nodeinfo.png)
+
+**League filter** — narrow the full network to a single league:
+
+![League Filter](media/leaguefilter.png)
+
+**Browsable managers page** — `/managers`, independent of the graph:
+
+![Browsable Managers Page](media/managerpage.png)
 
 ## Deployment
 
